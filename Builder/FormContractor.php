@@ -42,8 +42,7 @@ class FormContractor implements FormContractorInterface
      * @return void
      */
     public function fixFieldDescription(AdminInterface $admin, FieldDescriptionInterface $fieldDescription)
-    {
-        $metadata = null;
+    {        
         if ($admin->getModelManager()->hasMetadata($admin->getClass())) {
             /** @var Doctrine\ODM\PHPCR\Mapping\ClassMetadata $metadata */
             $metadata = $admin->getModelManager()->getMetadata($admin->getClass());
@@ -54,6 +53,12 @@ class FormContractor implements FormContractorInterface
             }
 
             // set the default association mapping
+            if (isset($metadata->associationsMappings[$fieldDescription->getName()])) {
+//                $fieldDescription->setAssociationMapping($metadata->associationsMappings[$fieldDescription->getName()]);
+                // TODO in some cases this breaks the doctrine_phpcr_type_tree_model
+            }
+
+            // set the default referrers mapping
             if (isset($metadata->referrersMappings[$fieldDescription->getName()])) {
                 $fieldDescription->setAssociationMapping($metadata->referrersMappings[$fieldDescription->getName()]);
             }
@@ -75,8 +80,10 @@ class FormContractor implements FormContractorInterface
             ClassMetadata::MANY_TO_MANY
         );
 
-
-        if ($metadata && isset($metadata->referrersMappings[$fieldDescription->getName()]) && in_array($fieldDescription->getMappingType(), $mappingTypes)) {
+        if ((isset($metadata->referrersMappings[$fieldDescription->getName()])
+            || isset($metadata->referrersMappings[$fieldDescription->getName()]))
+            && in_array($fieldDescription->getMappingType(), $mappingTypes)) 
+        {
             $admin->attachAdminClass($fieldDescription);
         }
     }
