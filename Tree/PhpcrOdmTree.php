@@ -144,7 +144,7 @@ class PhpcrOdmTree implements TreeInterface
                 // TODO: tooltip with full name?
                 $label = substr($label, 0, 17) . '...';
             }
-            $label .= ' <not editable>';
+//            $label .= ' <not editable>';
             $id = $this->defaultModelManager->getNormalizedIdentifier($document);
         }
 
