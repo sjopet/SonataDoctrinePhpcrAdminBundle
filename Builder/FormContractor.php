@@ -57,6 +57,11 @@ class FormContractor implements FormContractorInterface
             if (isset($metadata->referrersMappings[$fieldDescription->getName()])) {
                 $fieldDescription->setAssociationMapping($metadata->referrersMappings[$fieldDescription->getName()]);
             }
+
+            // set the default association mapping
+            if (isset($metadata->associationsMappings[$fieldDescription->getName()])) {
+                $fieldDescription->setAssociationMapping($metadata->associationsMappings[$fieldDescription->getName()]);
+            }
         }
 
         if (!$fieldDescription->getType()) {
@@ -76,7 +81,9 @@ class FormContractor implements FormContractorInterface
         );
 
 
-        if ($metadata && isset($metadata->referrersMappings[$fieldDescription->getName()]) && in_array($fieldDescription->getMappingType(), $mappingTypes)) {
+        if ((isset($metadata->referrersMappings[$fieldDescription->getName()])
+            || isset($metadata->associationsMappings[$fieldDescription->getName()]))
+            && in_array($fieldDescription->getMappingType(), $mappingTypes)) {
             $admin->attachAdminClass($fieldDescription);
         }
     }
@@ -141,7 +148,8 @@ class FormContractor implements FormContractorInterface
         } else if ($type == 'sonata_type_admin') {
 
             // nothing here ...
-            $options['edit'] = 'inline';
+            //$options['edit'] = 'standard';
+
 
         } else if ($type == 'sonata_type_collection') {
 
