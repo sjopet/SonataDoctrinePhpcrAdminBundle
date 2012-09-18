@@ -133,7 +133,8 @@ class PhpcrOdmTree implements TreeInterface
         $admin = $this->getAdmin($document);
         if (null !== $admin) {
             $label = $admin->toString($document);
-            $id = $admin->getModelManager()->getNormalizedIdentifier($document);
+            $id = $admin->getNormalizedIdentifier($document);
+            $urlSafeId = $admin->getUrlsafeIdentifier($document);
         } else {
             $className = ''; // empty class name means not editable
             $label = '';
@@ -146,6 +147,7 @@ class PhpcrOdmTree implements TreeInterface
             }
 //            $label .= ' <not editable>';
             $id = $this->defaultModelManager->getNormalizedIdentifier($document);
+            $urlSafeId = $this->defaultModelManager->getUrlsafeIdentifier($document);
         }
 
         // TODO: this is not an efficient way to determine if there are children. should ask the phpcr node
@@ -155,6 +157,7 @@ class PhpcrOdmTree implements TreeInterface
             'data'  => $label,
             'attr'  => array(
                 'id' => $id,
+                'url_safe_id' => $urlSafeId,
                 'rel' => $rel,
                 'classname' => $className,
             ),
@@ -190,10 +193,20 @@ class PhpcrOdmTree implements TreeInterface
         /** @var $meta \Doctrine\ODM\PHPCR\Mapping\ClassMetadata */
         $children = array();
         foreach ($meta->childrenMappings as $mapping) {
-            $children = array_merge($children, $meta->getReflectionProperty($mapping['name'])->getValue($document)->toArray());
+            $prop = $meta->getReflectionProperty($mapping['name'])->getValue($document);
+            if (is_null($prop)) {
+                continue;
+            }
+            if (! is_array($prop)) {
+                $prop = $prop->toArray();
+            }
+            $children = array_merge($children, $prop);
         }
         foreach ($meta->childMappings as $mapping) {
-            $children[$mapping['fieldName']] = $meta->getReflectionProperty($mapping['name'])->getValue($document);
+            $prop = $meta->getReflectionProperty($mapping['name'])->getValue($document);
+            if (! is_null($prop)) {
+                $children[$mapping['fieldName']] = $prop;
+            }
         }
 
         return $children;

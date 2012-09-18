@@ -223,8 +223,7 @@ class ModelManager implements ModelManagerInterface
     }
 
     /**
-     * @param string $class
-     * @return string
+     * {@inheritDoc}
      */
     public function getModelIdentifier($class)
     {
@@ -232,23 +231,20 @@ class ModelManager implements ModelManagerInterface
     }
 
     /**
-     * Transforms the document into the PHPCR path, but strips the leading / to
-     * avoid problems with the urls. PHPCR-ODM will re-add the leading slash
-     * when needed.
+     * Transforms the document into the PHPCR path.
      *
-     * Note: doctrine ORM seems to know multiple identifiers for one document.
-     * We only ever have one, but return that wrapped into an array for
-     * consistency.
+     * Note: This is returning an array because Doctrine ORM for example can
+     * have multiple identifiers, e.g. if the primary key is composed of
+     * several columns. We only ever have one, but return that wrapped into an
+     * array to adhere to the interface.
      *
-     * @param $document
-     *
-     * @return array with the id string for this document
+     * {@inheritDoc}
      */
     public function getIdentifierValues($document)
     {
         $class = $this->getMetadata(get_class($document));
         $path = $class->reflFields[$class->identifier]->getValue($document);
-        return array(substr($path, 1));
+        return array($path);
     }
 
     /**
@@ -261,14 +257,9 @@ class ModelManager implements ModelManagerInterface
     }
 
     /**
-     * Return the identifiers as one string. This is just taking the id out of
-     * the array again.
+     * {@inheritDoc}
      *
-     * @param object|null $document the document to get an id for. For null
-     *      document, null is returned.
-     *
-     * @return null|string
-     * @throws \RunTimeException
+     * This is just taking the id out of the array again.
      */
     public function getNormalizedIdentifier($document)
     {
@@ -287,6 +278,22 @@ class ModelManager implements ModelManagerInterface
     }
 
     /**
+     * {@inheritDoc}
+     *
+     * Currently only the leading slash is removed.
+     * TODO: do we also have to encode certain characters like spaces or does
+     * that happen automatically?
+     */
+    public function getUrlsafeIdentifier($document)
+    {
+        $id = $this->getNormalizedIdentifier($document);
+        if (null !== $id) {
+            return substr($id, 1);
+        }
+        return null;
+    }
+
+    /**
      * @param $class
      * @param \Sonata\AdminBundle\Datagrid\ProxyQueryInterface $queryProxy
      * @param array $idx
@@ -295,7 +302,7 @@ class ModelManager implements ModelManagerInterface
     public function addIdentifiersToQuery($class, ProxyQueryInterface $queryProxy, array $idx)
     {
         $fieldNames = $this->getIdentifierFieldNames($class);
-        
+
         /** @var \PHPCR\Util\QOM\QueryBuilder $qb  */
         $qb = $queryProxy->getQueryBuilder();
         $qmf = $qb->getQOMFactory();
@@ -305,7 +312,7 @@ class ModelManager implements ModelManagerInterface
             $ids = explode('-', $id);
             foreach ($fieldNames as $posName => $name) {
                 $path = $this->getBackendId($ids[$posName]);
-                $condition = $qmf->sameNode($path); 
+                $condition = $qmf->sameNode($path);
                 if ($constraint) {
                     $constraint = $qmf->orConstraint($constraint, $condition);
                 } else {
@@ -318,11 +325,11 @@ class ModelManager implements ModelManagerInterface
 
     /**
      * Add leading slash to construct valid phpcr document id.
-     * 
+     *
      * The phpcr-odm QueryBuilder uses absolute paths and expects id´s to start with a forward slash
      * because SonataAdmin uses object id´s for constructing URL´s it has to use id´s without the
      * leading slash.
-     * 
+     *
      * @param $id
      * @return string
      */
@@ -340,8 +347,8 @@ class ModelManager implements ModelManagerInterface
     {
         try {
             $i = 0;
-            foreach ($queryProxy->getQuery()->iterate() as $pos => $object) {
-                $this->documentManager->remove($object[0]);
+            foreach ($queryProxy->getQuery()->execute()->getNodes() as $object) {
+                $object->remove();
 
                 if ((++$i % 20) == 0) {
                     $this->documentManager->flush();
@@ -357,9 +364,7 @@ class ModelManager implements ModelManagerInterface
     }
 
     /**
-     * Returns a new model instance
-     * @param string $class
-     * @return mixed
+     * {@inheritDoc}
      */
     public function getModelInstance($class)
     {
