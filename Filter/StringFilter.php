@@ -45,13 +45,21 @@ class StringFilter extends Filter
 
         switch ($data['type']) {
         case ChoiceType::TYPE_EQUAL:
-            $constraint = $qf->comparison($qf->propertyValue($field), Constants::JCR_OPERATOR_EQUAL_TO, $qf->literal($data['value']));
+            $constraint = $qf->comparison(
+                $qf->lowerCase($qf->propertyValue($field)),
+                Constants::JCR_OPERATOR_EQUAL_TO,
+                $qf->literal(mb_strtolower($data['value']))
+            );
             break;
         case ChoiceType::TYPE_NOT_CONTAINS:
             $constraint = $qf->fulltextSearch($field, "* -".$data['value'], '['.$queryBuilder->getNodeType().']');
             break;
         case ChoiceType::TYPE_CONTAINS:
-            $constraint = $qf->comparison($qf->propertyValue($field), Constants::JCR_OPERATOR_LIKE, $qf->literal('%'.$data['value'].'%'));
+            $constraint = $qf->comparison(
+                $qf->lowerCase($qf->propertyValue($field)),
+                Constants::JCR_OPERATOR_LIKE,
+                $qf->literal('%' . mb_strtolower($data['value']) . '%')
+            );
             break;
         case ChoiceType::TYPE_CONTAINS_WORDS:
         default:
