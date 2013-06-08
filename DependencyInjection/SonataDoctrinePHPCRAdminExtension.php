@@ -83,6 +83,8 @@ class SonataDoctrinePHPCRAdminExtension extends Extension
         $loader->load('block.xml');
         $loader->load('tree.xml');
 
+        //$loader->load('group.list.admin.xml'); // @todo make this a generic service
+
         $configuration = new Configuration();
         $processor = new Processor();
         $config = $processor->processConfiguration($configuration, $configs);
