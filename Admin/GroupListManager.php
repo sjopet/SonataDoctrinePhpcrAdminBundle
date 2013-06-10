@@ -20,6 +20,7 @@ class GroupListManager extends Admin
     {
         $this->baseRouteName = 'admin_bundle_group_page_content';
         $this->baseRoutePattern = '/bundle/block/group/manager';
+        $this->setDelegateSubclassEditAction(true);
     }
 
     /**
@@ -77,25 +78,9 @@ class GroupListManager extends Admin
     public function getSubAdmin($class)
     {
         if(is_object($class)){
-            $class = \Doctrine\Common\Util\ClassUtils::getRealClass(get_class($class));
+            $class = \Doctrine\Common\Util\ClassUtils::getRealClass(get_class($class)); // proxyClass conversion
         }
 
         return $this->getConfigurationPool()->getAdminByClass($class);
-    }
-
-    /**
-     * Because of the structure of the subclasses array
-     * We need to change this function slightly
-     *
-     * @param  string $name The name of the sub class
-     * @return string the subclass
-     */
-    protected function getSubClass($name)
-    {
-        if ($this->hasSubClass($name)) {
-            return $name;
-        }
-
-        return null;
     }
 }
