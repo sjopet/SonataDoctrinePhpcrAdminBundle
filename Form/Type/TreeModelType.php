@@ -42,7 +42,7 @@ class TreeModelType extends AbstractType
 
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $builder->prependClientTransformer(new ModelToIdTransformer($options['model_manager'], $options['class']));
+        $builder->addViewTransformer(new ModelToIdTransformer($options['model_manager'], $options['class']), true);
         $builder->setAttribute('root_node', $options['root_node']);
         $builder->setAttribute('select_root_node', $options['select_root_node']);
     }
@@ -51,8 +51,8 @@ class TreeModelType extends AbstractType
     {
         parent::buildView($view, $form, $options);
         $view->vars['tree'] = $this->tree;
-        $view->vars['root_node'] = $form->getAttribute('root_node');
-        $view->vars['select_root_node'] = $form->getAttribute('select_root_node');
+        $view->vars['root_node'] = $form->getConfig()->getAttribute('root_node');
+        $view->vars['select_root_node'] = $form->getConfig()->getAttribute('select_root_node');
         $view->vars['routing_defaults'] = $this->defaults;
     }
 
@@ -80,11 +80,6 @@ class TreeModelType extends AbstractType
                 );
             }
         ));
-    }
-
-    public function getParent()
-    {
-        return 'field';
     }
 
     public function getName()
